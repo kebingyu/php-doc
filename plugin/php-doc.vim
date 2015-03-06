@@ -1,10 +1,10 @@
 " PDV (phpDocumentor for Vim)
 " ===========================
 "
-" Version: 1.0.1
+" Version: 1.0.0
 " 
-" Copyright 2005 by Tobias Schlitt <toby@php.net>
-" Inspired by phpDoc script for Vim by Vidyut Luther (http://www.phpcult.com/).
+" Copyright 2015 by Kebing Yu <yukebing@gmail.com>
+" Inspired by php-doc script for Vim by Tobias Schlitt <toby@php.net>.
 "
 " Provided under the GPL (http://www.gnu.org/copyleft/gpl.html).
 "
@@ -46,21 +46,8 @@
 " Version 1.0.0
 " -------------
 "
-"  * Created the initial version of this script while playing around with VIM
-"  scripting the first time and trying to fix Vidyut's solution, which
-"  resulted in a complete rewrite.
+"  * Improve and bug fix variable type checking
 "
-" Version 1.0.1
-" -------------
-"  * Fixed issues when using tabs instead of spaces.
-"  * Fixed some parsing bugs when using a different coding style.
-"  * Fixed bug with call-by-reference parameters. 
-"  * ATTENTION: This version already has code for the next version 1.1.0,
-"  which is propably not working!
-"
-" Version 1.1.0 (preview)
-" -------------
-"  * Added foldmarker generation.
 " 
 
 if has ("user_commands")
@@ -68,19 +55,19 @@ if has ("user_commands")
 " {{{ Globals
 
 " After phpDoc standard
-let g:pdv_cfg_CommentHead = "/**"
-let g:pdv_cfg_Comment1 = " * "
-let g:pdv_cfg_Commentn = " * "
-let g:pdv_cfg_CommentTail = " */"
+let g:pdv_cfg_CommentHead   = "/**"
+let g:pdv_cfg_Comment1      = " * "
+let g:pdv_cfg_Commentn      = " * "
+let g:pdv_cfg_CommentTail   = " */"
 let g:pdv_cfg_CommentSingle = "//"
 
 " Default values
-let g:pdv_cfg_Type = "mixed"
-let g:pdv_cfg_Package = ""
-let g:pdv_cfg_Version = ""
-let g:pdv_cfg_Author = ""
-let g:pdv_cfg_Copyright = "Copyright (c) 2015 Quinstreet, Inc."
-let g:pdv_cfg_License = ""
+let g:pdv_cfg_Type      = "mixed"
+let g:pdv_cfg_Package   = ""
+let g:pdv_cfg_Version   = ""
+let g:pdv_cfg_Author    = ""
+let g:pdv_cfg_Copyright = ""
+let g:pdv_cfg_License   = ""
 
 let g:pdv_cfg_ReturnVal = "void"
 
@@ -132,8 +119,8 @@ let g:pdv_re_array  = "^array *(.*"
 let g:pdv_re_float  = '^[0-9.]\+'
 let g:pdv_re_int    = '^[0-9]\+$'
 let g:pdv_re_string = "['\"].*"
-let g:pdv_re_bool   = "\(true\|false\)"
-let g:pdv_re_object = 'null\|std[cC]lass\|NULL'
+let g:pdv_re_bool   = 'true\|false'
+let g:pdv_re_object = 'null\|stdclass'
 
 let g:pdv_re_indent = '^\s*'
 
@@ -460,17 +447,17 @@ endfunc
 
 func! PhpDocType(typeString)
     if a:typeString =~ g:pdv_re_array 
-        let l:type = "array"
+        let l:type = 'array'
     elseif a:typeString =~ g:pdv_re_float 
-        let l:type = "float"
+        let l:type = 'float'
     elseif a:typeString =~ g:pdv_re_int 
-        let l:type = "int"
+        let l:type = 'int'
     elseif a:typeString =~ g:pdv_re_string
-        let l:type = "string"
+        let l:type = 'string'
     elseif a:typeString =~ g:pdv_re_bool
-        let l:type = "bool"
+        let l:type = 'bool'
     elseif a:typeString =~ g:pdv_re_object
-        let l:type = "object"
+        let l:type = 'object'
     else
 	    let l:type = g:pdv_cfg_Type
     endif
