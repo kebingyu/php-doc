@@ -105,6 +105,7 @@ let g:pdv_re_abstract = '\(abstract\)'
 let g:pdv_re_final = '\(final\)'
 
 " [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]+\([:params:]\)
+let g:pdv_re_func_rough = '^\s*\%([a-zA-Z ]*\)function\s\+'
 let g:pdv_re_func = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\s*\(.*\)\s*)\s*[{;]\?$'
 " [:typehint:]*[:space:]*$[:identifier]\([:space:]*=[:space:]*[:value:]\)?
 let g:pdv_re_param = ' *\([^ &]*\) *&\?\$\([A-Za-z_][A-Za-z0-9_]*\) *=\? *\(.*\)\?$'
@@ -197,6 +198,36 @@ endfunc
 
 " }}}
 
+func! TestFunc()
+    let l:z_save = @z
+    exe "norm! " . '0f(v%"zy'
+    let l:lines = split(@z, '\n')
+    for _ in l:lines
+        let l:matches = matchlist(_, g:pdv_re_param)
+        if len(l:matches)
+            echo l:matches
+        endif
+    endfor
+    let @z = z_save
+endfunc
+
+function! GetRange() range
+python << endPython
+import vim
+def get_visual_selection():
+    buf = vim.current.buffer
+    (starting_line_num, col1) = buf.mark('<')
+    (ending_line_num, col2) = buf.mark('>')
+    lines = vim.eval('getline({}, {})'.format(starting_line_num, ending_line_num))
+    lines[0] = lines[0][col1:]
+    lines[-1] = lines[-1][:col2 + 1]
+    return lines
+
+visual_selection = get_visual_selection()
+print(visual_selection)
+endPython
+endfunction
+
 " {{{ PhpDoc()
 
 func! PhpDoc()
@@ -207,8 +238,12 @@ func! PhpDoc()
     let l:line = getline(".")
     let l:result = ""
 
-    if l:line =~ g:pdv_re_func
-        let l:result = PhpDocFunc()
+    if l:line =~ g:pdv_re_func_rough
+        if l:line =~ g:pdv_re_func
+            let l:result = PhpDocFunc()
+        else
+            let l:result = TestFunc()
+        endif
 
     elseif l:line =~ g:pdv_re_attribute
         let l:result = PhpDocVar()
