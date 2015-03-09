@@ -47,7 +47,7 @@
 " -------------
 "
 "  * Improve and bug fix variable type checking
-"
+"  * Handle function signature spans multiple lines
 " 
 
 if has ("user_commands")
@@ -104,11 +104,18 @@ let g:pdv_re_abstract = '\(abstract\)'
 " (final)
 let g:pdv_re_final = '\(final\)'
 
+" [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]
+" This matches function signature with non or partial parameters at the same line
+let g:pdv_re_func_rough = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*('
 " [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]+\([:params:]\)
-let g:pdv_re_func_rough = '^\s*\%([a-zA-Z ]*\)function\s\+'
+" This matches full function signature at one single line
 let g:pdv_re_func = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\s*\(.*\)\s*)\s*[{;]\?$'
+
 " [:typehint:]*[:space:]*$[:identifier]\([:space:]*=[:space:]*[:value:]\)?
 let g:pdv_re_param = ' *\([^ &]*\) *&\?\$\([A-Za-z_][A-Za-z0-9_]*\) *=\? *\(.*\)\?$'
+" [:typehint:]*[:space:]*$[:identifier]\([:space:]*=[:space:]*[:value:]\)?
+" This matches parameters with function signature at the same line
+let g:pdv_re_param_with_func = '^\s*\%([a-zA-Z ]*\)function\s\+\%([^ (]\+\)\s*(' . g:pdv_re_param
 
 " [:space:]*(private|protected|public\)[:space:]*$[:identifier:]+\([:space:]*=[:space:]*[:value:]+\)*;
 let g:pdv_re_attribute = '^\s*\(\(private\|public\|protected\|var\|static\)\+\)\s*\$\([^ ;=]\+\)[ =]*\(.*\);\?$'
@@ -198,36 +205,6 @@ endfunc
 
 " }}}
 
-func! TestFunc()
-    let l:z_save = @z
-    exe "norm! " . '0f(v%"zy'
-    let l:lines = split(@z, '\n')
-    for _ in l:lines
-        let l:matches = matchlist(_, g:pdv_re_param)
-        if len(l:matches)
-            echo l:matches
-        endif
-    endfor
-    let @z = z_save
-endfunc
-
-function! GetRange() range
-python << endPython
-import vim
-def get_visual_selection():
-    buf = vim.current.buffer
-    (starting_line_num, col1) = buf.mark('<')
-    (ending_line_num, col2) = buf.mark('>')
-    lines = vim.eval('getline({}, {})'.format(starting_line_num, ending_line_num))
-    lines[0] = lines[0][col1:]
-    lines[-1] = lines[-1][:col2 + 1]
-    return lines
-
-visual_selection = get_visual_selection()
-print(visual_selection)
-endPython
-endfunction
-
 " {{{ PhpDoc()
 
 func! PhpDoc()
@@ -239,11 +216,7 @@ func! PhpDoc()
     let l:result = ""
 
     if l:line =~ g:pdv_re_func_rough
-        if l:line =~ g:pdv_re_func
-            let l:result = PhpDocFunc()
-        else
-            let l:result = TestFunc()
-        endif
+        let l:result = PhpDocFunc()
 
     elseif l:line =~ g:pdv_re_attribute
         let l:result = PhpDocVar()
@@ -286,8 +259,34 @@ func! PhpDocFunc()
     let l:indent = matchstr(l:name, g:pdv_re_indent)
 	
 	let l:modifier = substitute (l:name, g:pdv_re_func, '\1', "g")
-	let l:funcname = substitute (l:name, g:pdv_re_func, '\2', "g")
-	let l:parameters = substitute (l:name, g:pdv_re_func, '\3', "g") . ","
+	let l:funcname = ''
+    let l:parameters = ''
+    " Function signature in one line
+    if l:name =~ g:pdv_re_func
+	    let l:parameters = substitute (l:name, g:pdv_re_func, '\3', "g") . ","
+	    let l:funcname = substitute (l:name, g:pdv_re_func, '\2', "g")
+    " Function signature spans multiple lines
+    else
+        exe "norm! $"
+        let l:start_line = line('.')
+        let l:end_line = searchpair('(', '', ')') 
+        if l:end_line > 0
+            " Handle first line (contain 'function')
+            let l:parameters = substitute(l:name, g:pdv_re_param_with_func, '\1 $\2 \3', '')
+            " If no match is found (all parameters are below the first line)
+            if l:parameters == l:name
+                let l:parameters = ''
+            endif
+            " Handle rest of the lines
+            for _ in range(l:start_line + 1, l:end_line)
+	            let l:curr_line = substitute(getline (_), '^\(.*\)\/\/.*$', '\1', "")
+                let l:parameters = l:parameters . l:curr_line
+            endfor
+        endif
+        let l:parameters = l:parameters . ','
+	    let l:funcname = substitute (l:name, g:pdv_re_func_rough, '\2', "g")
+    endif
+
     let l:scope = PhpDocScope(l:modifier, l:funcname)
     let l:static = g:pdv_cfg_php4always == 1 ? matchstr(l:modifier, g:pdv_re_static) : ""
 	let l:abstract = g:pdv_cfg_php4always == 1 ? matchstr(l:modifier, g:pdv_re_abstract) : ""
