@@ -106,7 +106,7 @@ let g:pdv_re_final = '\(final\)'
 
 " [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]
 " This matches function signature with non or partial parameters at the same line
-let g:pdv_re_func_rough = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*('
+let g:pdv_re_func_rough = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\%(.*\)'
 " [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]+\([:params:]\)
 " This matches full function signature at one single line
 let g:pdv_re_func = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\s*\(.*\)\s*)\s*[{;]\?$'
@@ -481,17 +481,17 @@ endfunc
 
 func! PhpDocType(typeString)
     if a:typeString =~ g:pdv_re_array 
-        let l:type = 'array'
+        let l:type = 'Array'
     elseif a:typeString =~ g:pdv_re_float 
-        let l:type = 'float'
+        let l:type = 'Float'
     elseif a:typeString =~ g:pdv_re_int 
-        let l:type = 'int'
+        let l:type = 'Int'
     elseif a:typeString =~ g:pdv_re_string
-        let l:type = 'string'
+        let l:type = 'String'
     elseif a:typeString =~ g:pdv_re_bool
-        let l:type = 'bool'
+        let l:type = 'Boolean'
     elseif a:typeString =~ g:pdv_re_object
-        let l:type = 'object'
+        let l:type = 'Object'
     else
 	    let l:type = g:pdv_cfg_Type
     endif
