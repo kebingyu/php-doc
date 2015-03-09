@@ -48,6 +48,7 @@
 "
 "  * Improve and bug fix variable type checking
 "  * Handle function signature spans multiple lines
+"  * Print exceptions thrown in function
 " 
 
 if has ("user_commands")
@@ -122,6 +123,9 @@ let g:pdv_re_attribute = '^\s*\(\(private\|public\|protected\|var\|static\)\+\)\
 
 " [:spacce:]*(abstract|final|)[:space:]*(class|interface)+[:space:]+\(extends ([:identifier:])\)?[:space:]*\(implements ([:identifier:][, ]*)+\)?
 let g:pdv_re_class = '^\s*\([a-zA-Z]*\)\s*\(interface\|class\)\s*\([^ ]\+\)\s*\(extends\)\?\s*\([a-zA-Z0-9]*\)\?\s*\(implements*\)\? *\([a-zA-Z0-9_ ,]*\)\?.*$'
+
+" throw new [:exception:]
+let g:pdv_re_throw = '^\s*throw\s*new\s*\([^(]*\).*$'
 
 let g:pdv_re_array  = "^array *(.*"
 let g:pdv_re_float  = '^[0-9.]\+'
@@ -291,6 +295,21 @@ func! PhpDocFunc()
     let l:static = g:pdv_cfg_php4always == 1 ? matchstr(l:modifier, g:pdv_re_static) : ""
 	let l:abstract = g:pdv_cfg_php4always == 1 ? matchstr(l:modifier, g:pdv_re_abstract) : ""
 	let l:final = g:pdv_cfg_php4always == 1 ? matchstr(l:modifier, g:pdv_re_final) : ""
+
+    " Scan function body
+    exe "norm! 0"
+    " Search for exceptions
+    let l:exceptions = []
+    let l:body_start_line = searchpos('{')
+    let l:start_line = l:body_start_line[0]
+    let l:body_end_line = searchpos('}')
+    let l:end_line = l:body_end_line[0]
+    for _ in range(l:start_line, l:end_line)
+	    let l:curr_line = substitute(getline(_), '^\(.*\)\/\/.*$', '\1', "")
+        if l:curr_line =~ g:pdv_re_throw
+            let l:exceptions = add(l:exceptions, substitute(l:curr_line, g:pdv_re_throw, '\1', ''))
+        endif
+    endfor
     
     exe "norm! " . commentline . "G$"
     
@@ -335,7 +354,11 @@ func! PhpDocFunc()
     if l:scope != ""
     	exe l:txtBOL . g:pdv_cfg_Commentn . "@access " . l:scope . g:pdv_cfg_EOL
     endif
+    for _ in l:exceptions
+    	exe l:txtBOL . g:pdv_cfg_Commentn . "@throw " . _ . g:pdv_cfg_EOL
+    endfor
 	exe l:txtBOL . g:pdv_cfg_Commentn . "@return " . g:pdv_cfg_ReturnVal . g:pdv_cfg_EOL
+
 
 	" Close the comment block.
 	exe l:txtBOL . g:pdv_cfg_CommentTail . g:pdv_cfg_EOL
