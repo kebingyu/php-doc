@@ -302,8 +302,7 @@ func! PhpDocFunc()
     let l:exceptions = []
     let l:body_start_line = searchpos('{')
     let l:start_line = l:body_start_line[0]
-    let l:body_end_line = searchpos('}')
-    let l:end_line = l:body_end_line[0]
+    let l:end_line = searchpair('{', '', '}')
     for _ in range(l:start_line, l:end_line)
 	    let l:curr_line = substitute(getline(_), '^\(.*\)\/\/.*$', '\1', "")
         if l:curr_line =~ g:pdv_re_throw
@@ -504,17 +503,17 @@ endfunc
 
 func! PhpDocType(typeString)
     if a:typeString =~ g:pdv_re_array 
-        let l:type = 'Array'
+        let l:type = 'array'
     elseif a:typeString =~ g:pdv_re_float 
-        let l:type = 'Float'
+        let l:type = 'float'
     elseif a:typeString =~ g:pdv_re_int 
-        let l:type = 'Int'
+        let l:type = 'int'
     elseif a:typeString =~ g:pdv_re_string
-        let l:type = 'String'
+        let l:type = 'string'
     elseif a:typeString =~ g:pdv_re_bool
-        let l:type = 'Boolean'
+        let l:type = 'boolean'
     elseif a:typeString =~ g:pdv_re_object
-        let l:type = 'Object'
+        let l:type = 'object'
     else
 	    let l:type = g:pdv_cfg_Type
     endif
