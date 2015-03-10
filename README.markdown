@@ -3,11 +3,12 @@
 Version: 1.0.0
 
 This script is based on [php-doc script for Vim by Tobias Schlitt](http://www.vim.org/scripts/script.php?script_id=1355) with the following enhancements:
-* Improve and bug fix variable type checking
-* Handle function signature spans multiple lines
-* Print exceptions thrown in function
 
-## The script currently documents:
+* Improve and bug fix variable type checking.
+* Handle function signature spans multiple lines.
+* Print exceptions thrown in function.
+
+The script currently documents:
 
 * Classes
 * Methods/Functions
@@ -31,7 +32,7 @@ Then in vimrc, add the following:
     nnoremap <C-P> :call PhpDocSingle()<CR>
     vnoremap <C-P> :call PhpDocRange()<CR>
 
-This maps <ctrl>+p to the documentor function. 
+This maps `<ctrl>+p` to the documentor function. 
 
 ## License
 
