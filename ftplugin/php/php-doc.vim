@@ -4,51 +4,46 @@
 " Version: 1.0.0
 " 
 " Copyright 2015 by Kebing Yu <yukebing@gmail.com>
-" Inspired by php-doc script for Vim by Tobias Schlitt <toby@php.net>.
 "
-" Provided under the GPL (http://www.gnu.org/copyleft/gpl.html).
+" This script is based on php-doc script for Vim by Tobias Schlitt http://www.vim.org/scripts/script.php?script_id=1355 with the following enhancements:
+"  * Improve and bug fix variable type checking
+"  * Handle function signature spans multiple lines
+"  * Print exceptions thrown in function
 "
-" This script provides functions to generate phpDocumentor conform
-" documentation blocks for your PHP code. The script currently
-" documents:
+" The script currently documents:
 " 
 " - Classes
 " - Methods/Functions
 " - Attributes
 "
-" All of those supporting all PHP 4 and 5 syntax elements. 
-"
-" Beside that it allows you to define default values for phpDocumentor tags 
-" like @version (I use $id$ here), @author, @license and so on. 
-"
-" For function/method parameters and attributes, the script tries to guess the 
-" type as good as possible from PHP5 type hints or default values (array, bool, 
-" int, string...).
-"
-" You can use this script by mapping the function PhpDoc() to any
-" key combination. Hit this on the line where the element to document
-" resides and the doc block will be created directly above that line.
-" 
 " Installation
 " ============
 " 
-" For example include into your .vimrc:
+" Preferred way is to install through a plugin manager, like pathogen or vbundle. For example, to install through pathogen:
 " 
-" source ~/.vim/php-doc.vim
-" imap <C-o> :set paste<CR>:exe PhpDoc()<CR>:set nopaste<CR>i
+" cd ~/.vim/bundle
+" git clone https://github.com/kebingyu/php-doc.git
 "
-" This includes the script and maps the combination <ctrl>+o (only in
-" insert mode) to the doc function. 
+" or 
+"
+" cd ~/.vim
+" git submodule add https://github.com/kebingyu/php-doc.git  bundle/php-doc
+"
+" Then in vimrc, add the following:
+"
+" inoremap <C-P> <ESC>:call PhpDocSingle()<CR>i
+" nnoremap <C-P> :call PhpDocSingle()<CR>
+" vnoremap <C-P> :call PhpDocRange()<CR>
+"
+" This maps <ctrl>+p to the documentor function. 
 "
 " Changelog
 " =========
 "
 " Version 1.0.0
+"
 " -------------
 "
-"  * Improve and bug fix variable type checking
-"  * Handle function signature spans multiple lines
-"  * Print exceptions thrown in function
 " 
 
 if has ("user_commands")
