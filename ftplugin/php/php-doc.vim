@@ -6,9 +6,10 @@
 " Copyright 2015 by Kebing Yu <yukebing@gmail.com>
 "
 " This script is based on php-doc script for Vim by Tobias Schlitt http://www.vim.org/scripts/script.php?script_id=1355 with the following enhancements:
-"  * Improve and bug fix variable type checking
 "  * Handle function signature spans multiple lines
 "  * Print exceptions thrown in function
+"  * Improve variable type checking
+"  * Various bug fixes
 "
 " The script currently documents:
 " 
@@ -85,10 +86,10 @@ let g:pdv_cfg_php4guess = 1
 " the identifiers having an _ in the first place.
 let g:pdv_cfg_php4guessval = "protected"
 
-" Whether to print @access or not
-let g:pdv_print_access = 0
-" Whether to print function/variable name or not
-let g:pdv_print_name = 0
+" Whether to print @access tag
+let g:pdv_print_access = 1
+" Whether to print class/function/variable name
+let g:pdv_print_name = 1
 
 "
 " Regular expressions 
@@ -119,7 +120,7 @@ let g:pdv_re_param = ' *\([^ &]*\) *&\?\$\([A-Za-z_][A-Za-z0-9_]*\) *=\? *\(.*\)
 let g:pdv_re_param_with_func = '^\s*\%([a-zA-Z ]*\)function\s\+\%([^ (]\+\)\s*(' . g:pdv_re_param
 
 " [:space:]*(private|protected|public\)[:space:]*$[:identifier:]+\([:space:]*=[:space:]*[:value:]+\)*;
-let g:pdv_re_attribute = '^\s*\(\(private\|public\|protected\|var\|static\)\+\)\s*\$\([^ ;=]\+\)[ =]*\(.*\);\?$'
+let g:pdv_re_attribute = '^\s*\(\(private\|public\|protected\|var\|static\)\+\)\s*\(static\)\?\s*\$\([^ ;=]\+\)[ =]*\(.*\);\?$'
 
 " [:spacce:]*(abstract|final|)[:space:]*(class|interface)+[:space:]+\(extends ([:identifier:])\)?[:space:]*\(implements ([:identifier:][, ]*)+\)?
 let g:pdv_re_class = '^\s*\([a-zA-Z]*\)\s*\(interface\|class\)\s*\([^ ]\+\)\s*\(extends\)\?\s*\([a-zA-Z0-9_]*\)\?\s*\(implements*\)\? *\([a-zA-Z0-9_ ,]*\)\?.*$'
@@ -385,8 +386,9 @@ func! PhpDocVar()
     let l:indent = matchstr(l:name, g:pdv_re_indent)
 
 	let l:modifier = substitute (l:name, g:pdv_re_attribute, '\1', "g")
-	let l:varname = substitute (l:name, g:pdv_re_attribute, '\3', "g")
-	let l:default = substitute (l:name, g:pdv_re_attribute, '\4', "g")
+	let l:modifier2 = substitute (l:name, g:pdv_re_attribute, '\3', "g")
+	let l:varname = substitute (l:name, g:pdv_re_attribute, '\4', "g")
+	let l:default = substitute (l:name, g:pdv_re_attribute, '\5', "g")
     let l:scope = PhpDocScope(l:modifier, l:varname)
 
     let l:static = g:pdv_cfg_php4always == 1 ? matchstr(l:modifier, g:pdv_re_static) : ""
@@ -411,6 +413,9 @@ func! PhpDocVar()
     exe l:txtBOL . g:pdv_cfg_Commentn . "@var " . l:type . g:pdv_cfg_EOL
     if l:scope != "" && g:pdv_print_access
         exe l:txtBOL . g:pdv_cfg_Commentn . "@access " . l:scope . g:pdv_cfg_EOL
+    endif
+    if l:modifier2 != ''
+        exe l:txtBOL . g:pdv_cfg_Commentn . "@" . l:modifier2 . g:pdv_cfg_EOL
     endif
 	
     " Close the comment block.
