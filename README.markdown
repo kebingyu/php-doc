@@ -1,6 +1,6 @@
 # phpDocumentor for Vim
 
-Version: 1.0.0
+Version: 1.0.1
 
 This script is based on [php-doc script for Vim by Tobias Schlitt](http://www.vim.org/scripts/script.php?script_id=1355) with the following enhancements:
 
