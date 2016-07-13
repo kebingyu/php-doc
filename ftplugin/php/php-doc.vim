@@ -1,7 +1,7 @@
 " PDV (phpDocumentor for Vim)
 " ===========================
 "
-" Version: 1.0.1
+" Version: 1.0.2
 " 
 " Copyright 2015 by Kebing Yu <yukebing@gmail.com>
 "
@@ -43,6 +43,7 @@
 "
 " Version 1.0.0
 " Version 1.0.1: remove extra whitespaces.
+" Version 1.0.2: Adjust 'throws' position.
 "
 " -------------
 "
@@ -359,12 +360,12 @@ func! PhpDocFunc()
     if l:scope != "" && g:pdv_print_access
     	exe l:txtBOL . g:pdv_cfg_Commentn . "@access " . l:scope . g:pdv_cfg_EOL
     endif
-    for _ in l:exceptions
-    	exe l:txtBOL . g:pdv_cfg_Commentn . "@throw " . _ . g:pdv_cfg_EOL
-    endfor
 
     exe l:txtBOL . g:pdv_cfg_Comment1 . g:pdv_cfg_EOL
 	exe l:txtBOL . g:pdv_cfg_Commentn . "@return " . g:pdv_cfg_ReturnVal . g:pdv_cfg_EOL
+    for _ in l:exceptions
+        exe l:txtBOL . g:pdv_cfg_Commentn . "@throws " . _ . g:pdv_cfg_EOL
+    endfor
 
 
 	" Close the comment block.
