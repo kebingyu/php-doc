@@ -1,12 +1,13 @@
 " PDV (phpDocumentor for Vim)
 " ===========================
 "
-" Version: 1.0.2
+" Version: 1.0.3
 " 
 " Copyright 2015 by Kebing Yu <yukebing@gmail.com>
 "
 " This script is based on php-doc script for Vim by Tobias Schlitt http://www.vim.org/scripts/script.php?script_id=1355 with the following enhancements:
 "  * Handle function signature spans multiple lines
+"  * Handle retury type hinting for PHP7+.
 "  * Print exceptions thrown in function
 "  * Improve variable type checking
 "  * Various bug fixes
@@ -44,6 +45,7 @@
 " Version 1.0.0
 " Version 1.0.1: remove extra whitespaces.
 " Version 1.0.2: Adjust 'throws' position.
+" Version 1.0.3: Handle return type for php7.
 "
 " -------------
 "
@@ -111,9 +113,9 @@ let g:pdv_re_final = '\(final\)'
 " [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]
 " This matches function signature with non or partial parameters at the same line
 let g:pdv_re_func_rough = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\%(.*\)'
-" [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]+\([:params:]\)
+" [:space:]*(private|protected|public|static|abstract)*[:space:]+[:identifier:]+\([:params:]\)\(:[:returntype:]\)*
 " This matches full function signature at one single line
-let g:pdv_re_func = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\s*\(.*\)\s*)\s*[{;]\?$'
+let g:pdv_re_func = '^\s*\([a-zA-Z ]*\)function\s\+\([^ (]\+\)\s*(\s*\(.*\)\s*)\s*\(:\s*[^{; ]\+\)\?[{; ]\?$'
 
 " [:typehint:]*[:space:]*$[:identifier]\([:space:]*=[:space:]*[:value:]\)?
 let g:pdv_re_param = ' *\([^ &]*\) *&\?\$\([A-Za-z_][A-Za-z0-9_]*\) *=\? *\(.*\)\?$'
@@ -272,6 +274,7 @@ func! PhpDocFunc()
     if l:name =~ g:pdv_re_func
 	    let l:parameters = substitute (l:name, g:pdv_re_func, '\3', "g") . ","
 	    let l:funcname = substitute (l:name, g:pdv_re_func, '\2', "g")
+	    let l:returntype = substitute (l:name, g:pdv_re_func, '\4', "g")
     " Function signature spans multiple lines
     else
         exe "norm! $"
@@ -289,6 +292,8 @@ func! PhpDocFunc()
 	            let l:curr_line = substitute(getline (_), '^\(.*\)\/\/.*$', '\1', "")
                 let l:parameters = l:parameters . l:curr_line
             endfor
+            " process return type
+            let l:returntype = substitute (getline (l:end_line), '^\s*)\s*\(:\s*[^{]\+\)\?{\?\s*$', '\1', "")
         endif
         let l:parameters = l:parameters . ','
 	    let l:funcname = substitute (l:name, g:pdv_re_func_rough, '\2', "g")
@@ -348,6 +353,13 @@ func! PhpDocFunc()
 		exe l:txtBOL . g:pdv_cfg_Commentn . "@param" . l:paramtype . " $" . l:paramname . g:pdv_cfg_EOL
 	endwhile
 
+    " process return type
+    if l:returntype != ""
+		let l:returntype = substitute (l:returntype, '^:\s*\(.*\)$', '\1', "")
+    else
+        let l:returntype = g:pdv_cfg_ReturnVal
+    endif
+
 	if l:static != ""
         exe l:txtBOL . g:pdv_cfg_Commentn . "@static" . g:pdv_cfg_EOL
     endif
@@ -362,11 +374,10 @@ func! PhpDocFunc()
     endif
 
     exe l:txtBOL . g:pdv_cfg_Comment1 . g:pdv_cfg_EOL
-	exe l:txtBOL . g:pdv_cfg_Commentn . "@return " . g:pdv_cfg_ReturnVal . g:pdv_cfg_EOL
+	exe l:txtBOL . g:pdv_cfg_Commentn . "@return " . l:returntype . g:pdv_cfg_EOL
     for _ in l:exceptions
         exe l:txtBOL . g:pdv_cfg_Commentn . "@throws " . _ . g:pdv_cfg_EOL
     endfor
-
 
 	" Close the comment block.
 	exe l:txtBOL . g:pdv_cfg_CommentTail . g:pdv_cfg_EOL
